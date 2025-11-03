@@ -6,7 +6,7 @@ export const UserDetails = sequelize.define("UserDetails", {
   firstname: {
     type: DataTypes.STRING,
   },
-  lastnname:{
+  lastname:{
     type: DataTypes.STRING,    
   },
   gender: {

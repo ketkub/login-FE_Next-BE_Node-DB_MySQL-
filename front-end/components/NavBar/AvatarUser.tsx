@@ -19,7 +19,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User as UserIcon, LogOut } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation"; // 1. Import usePathname
+import { useRouter, usePathname } from "next/navigation";
+import { ProfileDialog } from "@/components/Dialogs/ProfileDialog";
 
 const AvatarUser = () => {
   const router = useRouter();
@@ -69,8 +70,8 @@ const AvatarUser = () => {
     router.push("/");
   };
 
-  const handleAccount = () => {
-    router.push("/profile");
+  const handleForgotPassword = () => {
+    router.push("/forgot-password");
   };
 
   const handleRegister = () => {
@@ -103,9 +104,13 @@ const AvatarUser = () => {
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="end" className="w-40">
-            <DropdownMenuItem onClick={handleAccount}>
-              My Account
-            </DropdownMenuItem>
+            <ProfileDialog>
+          <DropdownMenuItem 
+            onSelect={(e) => e.preventDefault()}
+          >
+            My Account
+          </DropdownMenuItem>
+        </ProfileDialog>
 
             <DropdownMenuSeparator />
 
@@ -148,6 +153,15 @@ const AvatarUser = () => {
               <Button type="submit" className="w-full">
                 Login
               </Button>
+              <p className="text-center text-sm text-gray-500">
+                You forgot your password?{" "}
+                <span
+                  className="text-blue-600 cursor-pointer hover:underline"
+                  onClick={handleForgotPassword}
+                >
+                  Reset Password
+                </span>
+              </p>
 
               <p className="text-center text-sm text-gray-500">
                 Don't have an account?{" "}
