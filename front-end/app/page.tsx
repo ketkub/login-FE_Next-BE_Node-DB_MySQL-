@@ -13,6 +13,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { useCartStore } from "@/store/cartStore"; // 👈 1. Import store กลาง
 
 interface Product {
   id: number;
@@ -27,10 +28,71 @@ interface ApiResponse {
   totalPages: number;
 }
 
+const decodeToken = (token: string) => {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const now = Date.now() / 1000;
+    if (payload.exp && payload.exp < now) {
+      localStorage.removeItem("token");
+      return null;
+    }
+    return payload;
+  } catch {
+    return null;
+  }
+};
+
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [totalPages, setTotalPages] = useState(0);
   const [page, setPage] = useState(1);
+
+  // --- ⭐️ 2. เปลี่ยนจาก incrementCart เป็น triggerRefetch ⭐️ ---
+  const triggerRefetch = useCartStore((state) => state.triggerRefetch);
+
+  const handleAddToCart = async (product: Product) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        alert("Please login first");
+        return;
+      }
+
+      const user = decodeToken(token);
+      if (!user) {
+        alert("Your session has expired. Please login again.");
+        return;
+      }
+
+      const response = await fetch("http://localhost:5000/api/cart/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          productId: product.id,
+          quantity: 1,
+        }),
+      });
+
+      if (response.ok) {
+        // --- ⭐️ 3. เรียก triggerRefetch() แทน ⭐️ ---
+        // นี่จะไปสั่งให้ CartDialog (ถ้าเปิดอยู่) และ Navbar (ผ่าน fetchCart)
+        // อัปเดตตัวเอง
+        triggerRefetch();
+        alert("Product added to cart!"); // (เพิ่มการแจ้งเตือน)
+      } else {
+        const errorData = await response.json();
+        console.error("Failed to add to cart (server error):", errorData);
+        alert(`Failed to add to cart: ${errorData.message || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Add to cart failed (network error):", error);
+      alert("An error occurred while adding to the cart.");
+    }
+  };
 
   useEffect(() => {
     fetch(`http://localhost:5000/api/products?page=${page}&limit=5`, {
@@ -39,12 +101,10 @@ export default function HomePage() {
       .then((res) => res.json())
       .then((data: ApiResponse) => {
         setProducts(data.totalItems.products);
-        setTotalPages(data.totalPages); 
-        console.log(data);
+        setTotalPages(data.totalPages);
       })
       .catch((err) => console.error("Failed to fetch products:", err));
-  }, [page]); 
-
+  }, [page]);
 
   return (
     <div className="min-h-screen bg-linear-to-br ">
@@ -80,7 +140,10 @@ export default function HomePage() {
               </CardContent>
 
               <CardFooter className="p-4 pt-0">
-                <Button className="w-full bg-slate-900 hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 text-white transition-colors group/btn">
+                <Button
+                  onClick={() => handleAddToCart(product)}
+                  className="w-full bg-slate-900 hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 text-white transition-colors group/btn"
+                >
                   <ShoppingCart className="w-4 h-4 mr-2 group-hover/btn:scale-110 transition-transform" />
                   Add to Cart
                 </Button>

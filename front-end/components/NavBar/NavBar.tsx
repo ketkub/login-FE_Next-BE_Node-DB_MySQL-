@@ -2,8 +2,8 @@ import React from 'react';
 import Logo from './Logo';
 import Search from './Search';
 import { Darkmode } from './Darkmode';
-import Avatar from './AvatarUser';
 import AvatarUser from './AvatarUser';
+import Cart from './Cart';
 
 const NavBar = () => {
   return (
@@ -14,7 +14,9 @@ const NavBar = () => {
 
         <div className='flex gap-3'>
           <Darkmode></Darkmode>
+          <Cart></Cart>
           <AvatarUser></AvatarUser>
+          
         </div>
       </div>
     </nav>

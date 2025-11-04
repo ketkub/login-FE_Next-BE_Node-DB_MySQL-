@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { User as UserIcon, LogOut } from "lucide-react"; // LogIn ไม่ได้ถูกใช้
 import { useRouter, usePathname } from "next/navigation";
 import { ProfileDialog } from "@/components/Dialogs/ProfileDialog";
+import CartDialog from "../Dialogs/CartDialog";
 
 // 💡 [เพิ่ม] 2. เพิ่มฟังก์ชัน decodeToken (ควรย้ายไป utils)
 const decodeToken = (token: string) => {
