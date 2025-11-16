@@ -88,7 +88,7 @@ export function OrdersView() {
     return (
         <Card className="dark:bg-slate-800">
             <CardHeader>
-                <CardTitle className="dark:text-white">
+                <CardTitle className="dark:text-white text-xl">
                     คำสั่งซื้อของลูกค้า ({allOrders.length})
                 </CardTitle>
             </CardHeader>
@@ -111,12 +111,8 @@ export function OrdersView() {
                 ) : (
                     <div className="space-y-4 max-h-[600px] overflow-y-auto">
 
-                        {allOrders
-                            .slice()
-                            .sort((a, b) => a.id - b.id)
-                            .map((order) => (
+                        {allOrders.slice().sort((a, b) => a.id - b.id).map((order) => (
                                 <div
-
                                     key={order.id}
                                     className="border dark:border-slate-700 rounded-lg p-4 dark:bg-slate-700/50"
                                 >

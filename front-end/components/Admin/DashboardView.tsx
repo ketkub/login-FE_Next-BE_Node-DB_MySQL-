@@ -158,7 +158,7 @@ export function DashboardView() {
             <p className="text-center text-gray-500 dark:text-gray-400">ไม่มีคำสั่งซื้อ</p>
           ) : (
             <div className="space-y-3">
-              {allOrders.slice(0, 5).map((order) => (
+              {allOrders.slice().sort((a, b) => a.id - b.id).map((order) =>(
                 <div
                   key={order.id}
                   className="flex justify-between items-center p-3 bg-gray-50 dark:bg-slate-700 rounded-lg"
