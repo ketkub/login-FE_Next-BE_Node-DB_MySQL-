@@ -90,7 +90,7 @@
                       border-color var(--transition-duration) var(--transition-ease),
                       opacity var(--transition-duration) var(--transition-ease);
   --transition-transform: transform var(--transition-duration-fast) var(--transition-ease);
-  
+
   /* 2. Subtle, layered shadows */
   --shadow-sm: 0 1px 2px 0 oklch(0% 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px oklch(0% 0 0 / 0.1), 
@@ -138,7 +138,6 @@
 
   /* Shadows might need different opacity in dark mode, but we can use the same variables for simplicity */
 }
-
 
 @layer base {
   * {

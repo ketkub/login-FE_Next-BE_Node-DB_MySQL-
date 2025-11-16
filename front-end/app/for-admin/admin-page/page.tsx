@@ -9,6 +9,7 @@ import { Sidebar } from "@/components/Admin/Sidebar";
 import { DashboardView } from "@/components/Admin/DashboardView";
 import { ProductsView } from "@/components/Admin/ProductsView";
 import { OrdersView } from "@/components/Admin/OrdersView";
+import { CategoriesView } from "@/components/Admin/CategoriesView";
 
 // 1. ย้าย decodeToken กลับมาไว้ที่นี่
 const decodeToken = (token: string) => {
@@ -25,7 +26,7 @@ const decodeToken = (token: string) => {
   }
 };
 
-type ActiveTab = "dashboard" | "products" | "view-orders";
+type ActiveTab = "dashboard" | "products" | "view-orders" | "categories";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -87,6 +88,7 @@ export default function AdminPage() {
             {activeTab === "dashboard" && "📊 Dashboard"}
             {activeTab === "products" && "🛍️ สินค้า"}
             {activeTab === "view-orders" && "📦 ดูคำสั่งซื้อ"}
+            {activeTab === "categories" && "🗂️ หมวดหมู่"}
           </h2>
         </header>
 
@@ -96,6 +98,7 @@ export default function AdminPage() {
           {activeTab === "dashboard" && <DashboardView />}
           {activeTab === "products" && <ProductsView />}
           {activeTab === "view-orders" && <OrdersView />}
+          {activeTab === "categories" && <CategoriesView />}
         </main>
       </div>
     </div>

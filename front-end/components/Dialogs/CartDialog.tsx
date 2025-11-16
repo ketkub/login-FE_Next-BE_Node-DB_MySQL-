@@ -72,6 +72,21 @@ const CartDialog = () => {
       return;
     }
 
+    // --- 💡 [เพิ่ม] Optimistic Update: อัปเดต UI ทันที ---
+    setCartItems((currentItems) =>
+      currentItems.map((item) =>
+        item.id === cartItemId ? { ...item, quantity: newQuantity } : item
+      )
+    );
+
+    // --- คำนวณราคารวมใหม่จาก State ที่เพิ่งอัปเดต ---
+    const updatedItems = cartItems.map((item) =>
+      item.id === cartItemId ? { ...item, quantity: newQuantity } : item
+    );
+    const newTotal = updatedItems.reduce((sum, item) => sum + item.quantity * item.Product.price, 0);
+    setTotalPrice(newTotal);
+    // --- สิ้นสุดส่วนที่เพิ่ม ---
+
     try {
       const token = localStorage.getItem("token");
       const res = await fetch("http://localhost:5000/api/cart/update", {
@@ -84,9 +99,11 @@ const CartDialog = () => {
       });
 
       if (res.ok) {
-        triggerRefetch();
+        // 💡 [แก้ไข] ไม่ต้อง refetch ทั้งหมดแล้ว เพราะ UI อัปเดตไปแล้ว
+        // triggerRefetch(); // เราจะ refetch เฉพาะตอนเปิด Dialog ใหม่
       } else {
         console.error("Failed to update quantity");
+        fetchCart(); // 💡 [เพิ่ม] หากล้มเหลว ให้ดึงข้อมูลจริงกลับมา
       }
     } catch (error) {
       console.error("Error updating quantity:", error);

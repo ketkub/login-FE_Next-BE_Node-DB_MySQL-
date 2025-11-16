@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Loader2 } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
@@ -24,9 +25,13 @@ interface Product {
   InStock: number;
 }
 
+// 💡 [แก้ไข] 1. ปรับ Interface ให้ตรงกับข้อมูลที่ Backend ส่งมา
 interface ApiResponse {
-  totalItems: { products: Product[] };
+  success: boolean;
+  count: number;
+  data: Product[];
   totalPages: number;
+  totalProducts: number;
 }
 
 const decodeToken = (token: string) => {
@@ -43,13 +48,19 @@ const decodeToken = (token: string) => {
   }
 };
 
-export default function ProductsPage() {
+// 💡 [แยก] 2. สร้าง Component หลักเพื่อจัดการ Logic และรองรับ Suspense
+function ProductsContent() {
+  const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [totalPages, setTotalPages] = useState(0);
   const [page, setPage] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // --- ⭐️ 2. เปลี่ยนจาก incrementCart เป็น triggerRefetch ⭐️ ---
   const triggerRefetch = useCartStore((state) => state.triggerRefetch);
+  const query = searchParams.get('q');
+
 
   const handleAddToCart = async (product: Product) => {
     try {
@@ -79,9 +90,6 @@ export default function ProductsPage() {
       });
 
       if (response.ok) {
-        // --- ⭐️ 3. เรียก triggerRefetch() แทน ⭐️ ---
-        // นี่จะไปสั่งให้ CartDialog (ถ้าเปิดอยู่) และ Navbar (ผ่าน fetchCart)
-        // อัปเดตตัวเอง
         triggerRefetch();
         alert("Product added to cart!"); // (เพิ่มการแจ้งเตือน)
       } else {
@@ -95,27 +103,72 @@ export default function ProductsPage() {
     }
   };
 
+  // 💡 [แก้ไข] 3. ปรับปรุง useEffect ให้รองรับการกรองข้อมูลจาก URL
   useEffect(() => {
-    fetch(`http://localhost:5000/api/products?page=${page}&limit=5`, {
-      cache: "no-store",
-    })
-      .then((res) => res.json())
-      .then((data: ApiResponse) => {
-        setProducts(data.totalItems.products);
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // สร้าง URLSearchParams จาก searchParams ของ Next.js
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('page', page.toString());
+        params.set('limit', '6');
+
+        const response = await fetch(`http://localhost:5000/api/products?${params.toString()}`, {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error('ไม่สามารถโหลดข้อมูลสินค้าได้');
+        }
+
+        const data: ApiResponse = await response.json();
+        
+        // 💡 [แก้ไข] 4. อัปเดต state จากข้อมูลใหม่ที่ได้จาก API
+        setProducts(data.data);
         setTotalPages(data.totalPages);
-      })
-      .catch((err) => console.error("Failed to fetch products:", err));
-  }, [page]);
+        setTotalProducts(data.totalProducts);
+
+      } catch (err: any) {
+        console.error("Failed to fetch products:", err);
+        setError(err.message || "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [page, searchParams]); // ทำงานใหม่ทุกครั้งที่ page หรือ searchParams เปลี่ยน
 
   return (
     <div className="min-h-screen ">
       <div className="max-w-6xl mx-auto p-4 md:p-8">
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white">
-            สินค้า
+            {query ? `ผลการค้นหา: "${query}"` : "สินค้าทั้งหมด"}
           </h1>
+          {!isLoading && !error && (
+            <p className="text-md text-gray-500 dark:text-gray-400 mt-2">
+              พบ {totalProducts} รายการ
+            </p>
+          )}
         </div>
 
+        {isLoading && (
+          <div className="flex justify-center items-center py-20">
+            <Loader2 className="w-12 h-12 animate-spin text-purple-500" />
+          </div>
+        )}
+        {error && <div className="text-center py-10 text-red-500">{error}</div>}
+
+        {!isLoading && !error && products.length === 0 && (
+          <div className="text-center py-20">
+            <h2 className="text-2xl font-semibold">ไม่พบสินค้า</h2>
+            <p className="text-gray-500 mt-2">ลองเปลี่ยนเงื่อนไขการค้นหาของคุณ หรือล้างการกรอง</p>
+          </div>
+        )}
+
+        {!isLoading && !error && products.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8">
           {products.map((product) => (
             <Card
@@ -161,6 +214,7 @@ export default function ProductsPage() {
             </Card>
           ))}
         </div>
+        )}
 
         {totalPages > 1 && (
           <div className="mt-8 flex justify-center">
@@ -214,5 +268,14 @@ export default function ProductsPage() {
     </div>
 
 
+  );
+}
+
+// 💡 [เพิ่ม] 5. ใช้ Suspense เพื่อรอให้ Client Component พร้อมใช้งาน searchParams
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center py-20"><Loader2 className="w-12 h-12 animate-spin text-purple-500" /></div>}>
+      <ProductsContent />
+    </Suspense>
   );
 }

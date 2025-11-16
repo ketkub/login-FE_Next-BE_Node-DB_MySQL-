@@ -4,6 +4,13 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Plus } from "lucide-react";
 
@@ -11,15 +18,21 @@ interface ProductForm {
     name: string;
     description: string;
     price: string;
-    category: string;
+    categoryId: string; // 💡 [แก้ไข] เปลี่ยนเป็น categoryId
     brand: string;
     InStock: string;
+}
+
+// 💡 [เพิ่ม] Interface สำหรับ Category
+interface Category {
+    id: number;
+    name: string;
 }
 const initialFormState = {
     name: "",
     description: "",
     price: "",
-    category: "",
+    categoryId: "", // 💡 [แก้ไข] เปลี่ยนเป็น categoryId
     brand: "",
     InStock: "",
 };
@@ -41,16 +54,36 @@ export function ProductFormModal({
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string>("");
     const [addingProduct, setAddingProduct] = useState(false);
+    // 💡 [เพิ่ม] State สำหรับเก็บรายการหมวดหมู่
+    const [categories, setCategories] = useState<Category[]>([]);
     const editingProductId = productToEdit?.id || null;
 
     useEffect(() => {
         if (isOpen) {
+            // 💡 [เพิ่ม] Fetch categories เมื่อ modal เปิด
+            const fetchCategories = async () => {
+                const token = localStorage.getItem("token");
+                if (!token) return;
+                try {
+                    const res = await fetch("http://localhost:5000/api/categories", {
+                        headers: { Authorization: `Bearer ${token}` },
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        setCategories(data || []);
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch categories for form", error);
+                }
+            };
+            fetchCategories();
+
             if (productToEdit) {
                 setProductForm({
                     name: productToEdit.name || "",
                     description: productToEdit.description || "",
                     price: String(productToEdit.price ?? "0"),
-                    category: productToEdit.category || "",
+                    categoryId: String(productToEdit.categoryId ?? ""), // 💡 [แก้ไข]
                     brand: productToEdit.brand || "",
                     InStock: String(productToEdit.InStock ?? 0),
                 });
@@ -98,7 +131,7 @@ export function ProductFormModal({
                     formData.append("name", productForm.name);
                     formData.append("description", productForm.description);
                     formData.append("price", productForm.price);
-                    formData.append("category", productForm.category);
+                    formData.append("categoryId", productForm.categoryId); // 💡 [แก้ไข]
                     formData.append("brand", productForm.brand);
                     formData.append("InStock", productForm.InStock);
                     formData.append("image", imageFile);
@@ -124,8 +157,8 @@ export function ProductFormModal({
                     const body = {
                         name: productForm.name,
                         description: productForm.description,
-                        price: parseFloat(productForm.price || '0'),
-                        category: productForm.category,
+                        price: parseFloat(productForm.price || "0"),
+                        categoryId: productForm.categoryId && productForm.categoryId !== "null-value" ? parseInt(productForm.categoryId, 10) : null,
                         brand: productForm.brand,
                         InStock: parseInt(productForm.InStock || '0', 10),
                     };
@@ -156,7 +189,7 @@ export function ProductFormModal({
                 formData.append("name", productForm.name);
                 formData.append("description", productForm.description);
                 formData.append("price", productForm.price);
-                formData.append("category", productForm.category);
+                formData.append("categoryId", productForm.categoryId); // 💡 [แก้ไข]
                 formData.append("brand", productForm.brand);
                 formData.append("InStock", productForm.InStock);
                 formData.append("image", imageFile);
@@ -219,8 +252,19 @@ export function ProductFormModal({
                                     <Input id="price" type="number" step="0.01" min="0" value={productForm.price} onChange={handleProductInputChange} className="dark:bg-slate-700 dark:border-slate-600 dark:text-white" required />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="category" className="dark:text-white font-semibold">หมวดหมู่ *</Label>
-                                    <Input id="category" value={productForm.category} onChange={handleProductInputChange} className="dark:bg-slate-700 dark:border-slate-600 dark:text-white" required />
+                                    <Label htmlFor="categoryId" className="dark:text-white font-semibold">หมวดหมู่ *</Label>
+                                    {/* 💡 [แก้ไข] เปลี่ยนเป็น Select */}
+                                    <Select value={productForm.categoryId} onValueChange={(value) => setProductForm(prev => ({ ...prev, categoryId: value }))}>
+                                        <SelectTrigger className="dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                            <SelectValue placeholder="— เลือกหมวดหมู่ —" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="null-value">— ไม่มีหมวดหมู่ —</SelectItem>
+                                            {categories.map(cat => (
+                                                <SelectItem key={cat.id} value={String(cat.id)}>{cat.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="InStock" className="dark:text-white font-semibold">จำนวนในสต็อก *</Label>

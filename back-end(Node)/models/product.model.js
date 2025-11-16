@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.config.js";
+import { Category } from "./category.model.js";
 
 export const Product = sequelize.define("Product", {
   name: {
@@ -16,10 +17,6 @@ export const Product = sequelize.define("Product", {
   image: {
     type: DataTypes.STRING,
   },
-  category: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
   brand: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -28,4 +25,13 @@ export const Product = sequelize.define("Product", {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
+});
+
+Category.hasMany(Product, {
+  foreignKey: "categoryId",
+  onDelete: "SET NULL",
+});
+
+Product.belongsTo(Category, {
+  foreignKey: "categoryId",
 });

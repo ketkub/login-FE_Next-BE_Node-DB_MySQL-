@@ -13,7 +13,10 @@ interface Product {
     price: number;
     InStock: number;
     image?: string;
-    // เพิ่ม field อื่นๆ ตามต้องการ
+    Category?: {
+        name: string;
+    }
+
 }
 
 // --- 2. สร้างตัวจัดรูปแบบไว้ด้านนอก ---
@@ -49,16 +52,8 @@ export function ProductsView() {
             const res = await fetch("http://localhost:5000/api/products");
             const data = await res.json().catch(() => null);
             if (res.ok) {
-                const items = Array.isArray(data)
-                    ? data
-                    : data?.products
-                        ? data.products
-                        : data?.totalItems?.products
-                            ? data.totalItems.products
-                            : data?.items
-                                ? data.items
-                                : [];
-                setProducts(items);
+                // 💡 [แก้ไข] ดึงข้อมูลจาก data.data ซึ่งเป็นโครงสร้างที่ API ส่งกลับมา
+                setProducts(data?.data || []);
             } else {
                 const msg = (data && data.message) || `Server returned ${res.status}`;
                 setProductError(msg);
@@ -152,6 +147,10 @@ export function ProductsView() {
                                             {/* --- 3. อัปเดตการแสดงผล Stock --- */}
                                             <p className="text-sm text-gray-500 dark:text-gray-400">
                                                 สต็อก: {numberFormatter.format(p.InStock ?? 0)}
+                                            </p>
+                                            {/* 💡 [เพิ่ม] แสดงชื่อหมวดหมู่ */}
+                                            <p className="text-sm text-gray-500 dark:text-gray-400 w-full">
+                                                หมวดหมู่: {p.Category?.name || 'N/A'}
                                             </p>
                                         </div>
                                     </div>
