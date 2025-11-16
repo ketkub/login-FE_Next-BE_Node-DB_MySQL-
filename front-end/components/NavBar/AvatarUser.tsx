@@ -16,6 +16,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { ProfileDialog } from "@/components/Dialogs/ProfileDialog";
 import { useCartStore } from "@/store/cartStore";
 import Cart from "./Cart";
+import LoginAdmin from "./LoginAdmin";
 
 // 💡 [เพิ่ม] 2. เพิ่มฟังก์ชัน decodeToken (ควรย้ายไป utils)
 const decodeToken = (token: string) => {
@@ -178,6 +179,7 @@ const AvatarUser = () => {
             <PencilIcon className="w-4 h-4 mr-2 text-start" />
             Register
           </Button>
+          <LoginAdmin/>
         </div>
       )}
     </div>

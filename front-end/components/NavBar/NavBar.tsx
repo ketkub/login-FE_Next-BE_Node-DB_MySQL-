@@ -24,9 +24,8 @@ const NavBar = () => {
 
         <div className='flex gap-3'>
           <Darkmode></Darkmode>
-          <Cart></Cart>
+          <Cart/>
           <AvatarUser></AvatarUser>
-          <LoginAdmin/>
         </div>
       </div>
     </nav>
